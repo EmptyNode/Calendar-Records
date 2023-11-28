@@ -1,8 +1,6 @@
 <?php
-$servername = "localhost";
-$username = "root";
-$password = ""; 
-$dbname = "events";
+
+include 'db_conn.php';
 
 
 $conn = new mysqli($servername, $username, $password, $dbname);

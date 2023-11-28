@@ -556,3 +556,7 @@ body {
 .credits a:hover {
   text-decoration: underline;
 }
+
+.bigText{
+  font-size: 2rem;
+}
