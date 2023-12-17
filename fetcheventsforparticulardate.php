@@ -9,25 +9,23 @@ if ($conn->connect_error) {
     die(json_encode(['error' => 'Connection failed: ' . $conn->connect_error]));
 }
 
+// Extract day, month, and year from the request
+$day = $_GET['day'];
 $month = $_GET['month'];
 $year = $_GET['year'];
 
 // Validate input parameters
-if (!is_numeric($month) || !is_numeric($year)) {
+if (!is_numeric($day) || !is_numeric($month) || !is_numeric($year)) {
     header('Content-Type: application/json');
     die(json_encode(['error' => 'Invalid input parameters']));
 }
 
-// Construct the start and end dates of the month
-$firstDay = sprintf('%04d-%02d-01', $year, $month);
-$lastDay = date('Y-m-t', strtotime($firstDay));
-
-// Use prepared statements to prevent SQL injection
-$sql = "SELECT roomnumber, DAY(arrivaldate) as day FROM event WHERE arrivaldate BETWEEN ? AND ?";
+// Use prepared statement to prevent SQL injection
+$sql = "SELECT roomnumber FROM event WHERE DAY(arrivaldate) = ? AND MONTH(arrivaldate) = ? AND YEAR(arrivaldate) = ?";
 $stmt = $conn->prepare($sql);
 
 if ($stmt) {
-    $stmt->bind_param("ss", $firstDay, $lastDay);
+    $stmt->bind_param("sss", $day, $month, $year);
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -36,10 +34,7 @@ if ($stmt) {
 
         // Fetch each row and add room number to the array
         while ($row = $result->fetch_assoc()) {
-            $roomNumbers[] = [
-                'day' => $row['day'],
-                'roomnumber' => $row['roomnumber']
-            ];
+            $roomNumbers[] = $row['roomnumber'];
         }
 
         // Return the room numbers as JSON
