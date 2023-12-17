@@ -12,14 +12,14 @@ if ($conn->connect_error) {
 $day = $_POST['day'];
 $month = $_POST['month'];
 $year = $_POST['year'];
-$roomNumber = $_POST['eventTitle'];
+$roomnumber = $_POST['roomNumber'];
 
 // Create formatted date in "YYYY-MM-DD" format
-$arrivalday = date("Y-m-d", mktime(0, 0, 0, $month, $day, $year));
-
+$arrivaldate = sprintf('%04d-%02d-%02d', $year, $month - 1, $day);
+echo $arrivaldate;
 // Use prepared statement to prevent SQL injection
-$stmt = $conn->prepare("DELETE FROM events WHERE arrivalday = ? AND roomnumber = ?");
-$stmt->bind_param("ss", $arrivalday, $roomNumber); // Corrected this line
+$stmt = $conn->prepare("DELETE FROM event WHERE arrivaldate = ? AND roomnumber = ?");
+$stmt->bind_param("ss", $arrivaldate, $roomnumber);
 
 if ($stmt->execute()) {
     echo json_encode(["success" => true]);

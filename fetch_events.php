@@ -22,8 +22,11 @@ if (!is_numeric($month) || !is_numeric($year)) {
 $firstDay = sprintf('%04d-%02d-01', $year, $month);
 $lastDay = date('Y-m-t', strtotime($firstDay));
 
+// Generate an array with all days of the month
+$allDays = range(1, date('t', strtotime($firstDay)));
+
 // Use prepared statements to prevent SQL injection
-$sql = "SELECT roomnumber, DAY(arrivaldate) as day FROM event WHERE arrivaldate BETWEEN ? AND ?";
+$sql = "SELECT DAY(arrivaldate) as day, COUNT(roomnumber) as roomCount FROM event WHERE arrivaldate BETWEEN ? AND ? GROUP BY DAY(arrivaldate)";
 $stmt = $conn->prepare($sql);
 
 if ($stmt) {
@@ -34,15 +37,23 @@ if ($stmt) {
     if ($result) {
         $roomNumbers = array();
 
-        // Fetch each row and add room number to the array
-        while ($row = $result->fetch_assoc()) {
+        // Initialize the availability for all days to 0
+        foreach ($allDays as $day) {
             $roomNumbers[] = [
-                'day' => $row['day'],
-                'roomnumber' => $row['roomnumber']
+                'day' => $day,
+                'availability' => 0
             ];
         }
 
-        // Return the room numbers as JSON
+        // Fetch each row and update room number availability in the array
+        while ($row = $result->fetch_assoc()) {
+            $dayIndex = array_search($row['day'], array_column($roomNumbers, 'day'));
+            if ($dayIndex !== false) {
+                $roomNumbers[$dayIndex]['availability'] = ($row['roomCount'] > 0) ? 1 : 0;
+            }
+        }
+
+        // Return the room numbers availability as JSON
         header('Content-Type: application/json');
         echo json_encode(['roomNumbers' => $roomNumbers]);
     } else {

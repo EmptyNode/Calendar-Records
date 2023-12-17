@@ -558,6 +558,7 @@ body {
 }
 
 .bigText{
-  font-size: 2rem;
+  font-size: 1rem;
+  /* color: red !important; */
+  border-bottom: 4px solid #b38add !important;
 }
-

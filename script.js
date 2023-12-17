@@ -39,82 +39,7 @@ const months = [
 
 
 const eventsArr = [];
-getEvents();
-console.log(eventsArr);
 
-
-
-// async function initCalendar() {
-//   const firstDay = new Date(year, month, 1);
-//   const lastDay = new Date(year, month + 1, 0);
-//   const prevLastDay = new Date(year, month, 0);
-//   const prevDays = prevLastDay.getDate();
-//   const lastDate = lastDay.getDate();
-//   const day = firstDay.getDay();
-//   const nextDays = 7 - lastDay.getDay() - 1;
-
-//   date.innerHTML = months[month] + " " + year;
-
-//   // Create an array of days in the current month
-//   const daysInMonth = Array.from({ length: lastDate }, (_, index) => index + 1);
-
-//   // Fetch room numbers for the entire month
-//   const roomNumbersAvailable = await hasRoomNumbers(daysInMonth);
-
-//   let days = "";
-
-//   for (let x = day; x > 0; x--) {
-//     days += `<div class="day prev-date">${prevDays - x + 1}</div>`;
-//   }
-
-//   for (let i = 1; i <= lastDate; i++) {
-//     const roomNumbersAvailableForDay = roomNumbersAvailable[i] || [];
-//     let event = false;
-//     let eventClass = '';
-
-//     eventsArr.forEach((eventObj) => {
-//       if (
-//         eventObj.day === i &&
-//         eventObj.month === month + 1 &&
-//         eventObj.year === year
-//       ) {
-//         event = true;
-//       }
-//     });
-
-//     if (
-//       i === new Date().getDate() &&
-//       year === new Date().getFullYear() &&
-//       month === new Date().getMonth()
-//     ) {
-//       activeDay = i;
-//       getActiveDay(i);
-//       updateEvents(i);
-//       if (event) {
-//         eventClass = 'today active event';
-//       } else {
-//         eventClass = 'today active';
-//       }
-//     } else {
-//       if (event) {
-//         eventClass = 'event';
-//       }
-//     }
-
-//     if (roomNumbersAvailableForDay.length > 0) {
-//       eventClass += ' bigText';
-//     }
-
-//     days += `<div class="day ${eventClass}" data-day="${i}">${i}</div>`;
-//   }
-
-//   for (let j = 1; j <= nextDays; j++) {
-//     days += `<div class="day next-date">${j}</div>`;
-//   }
-
-//   daysContainer.innerHTML = days;
-//   addListener();
-// }
 
 async function initCalendar() {
   const firstDay = new Date(year, month, 1);
@@ -133,6 +58,7 @@ async function initCalendar() {
   // Fetch room numbers for the entire month
   const roomNumbersAvailable = await hasRoomNumbers(daysInMonth);
 
+
   let days = "";
 
   for (let x = day; x > 0; x--) {
@@ -140,10 +66,12 @@ async function initCalendar() {
   }
 
   for (let i = 1; i <= lastDate; i++) {
-    const roomNumbersAvailableForDay = roomNumbersAvailable[i] || [];
+    const dayAvailability = roomNumbersAvailable.find((item) => item.day === i)?.availability || 0;
+  
+    const roomNumbersAvailableForDay = dayAvailability === 1 ? " bigText" : "";
     let event = false;
     let eventClass = '';
-
+  
     eventsArr.forEach((eventObj) => {
       if (
         eventObj.day === i &&
@@ -153,7 +81,7 @@ async function initCalendar() {
         event = true;
       }
     });
-
+  
     if (
       i === new Date().getDate() &&
       year === new Date().getFullYear() &&
@@ -172,14 +100,15 @@ async function initCalendar() {
         eventClass = 'event';
       }
     }
-
+  
     // Check if there is a single event for the day
     if (roomNumbersAvailableForDay.length === 1) {
-      eventClass += ' bigText'; // Add a specific class for black background
+      eventClass += ' ${roomNumbersAvailableForDay}'; // Add a specific class for room number availability
     }
-
-    days += `<div class="day ${eventClass}" data-day="${i}">${i}</div>`;
+  
+    days += `<div class="day ${eventClass}${roomNumbersAvailableForDay}" data-day="${i}">${i}</div>`;
   }
+  
 
   for (let j = 1; j <= nextDays; j++) {
     days += `<div class="day next-date">${j}</div>`;
@@ -190,8 +119,7 @@ async function initCalendar() {
 }
 
 
-
-async function hasRoomNumbers(days) {
+async function hasRoomNumbers() {
   const fetchURL = `fetch_events.php?month=${month + 1}&year=${year}`;
 
   try {
@@ -201,19 +129,7 @@ async function hasRoomNumbers(days) {
     }
 
     const data = await response.json();
-    const roomNumbers = data.roomNumbers || [];
-
-    // Create an object with day numbers as keys and room numbers as values
-    const roomNumbersByDay = roomNumbers.reduce((acc, roomNumber) => {
-      const day = roomNumber.day;
-      if (!acc[day]) {
-        acc[day] = [];
-      }
-      acc[day].push(roomNumber.roomnumber);
-      return acc;
-    }, {});
-
-    return roomNumbersByDay;
+    return data.roomNumbers || {};
   } catch (error) {
     console.error('Error fetching events:', error);
     return {};
@@ -222,9 +138,6 @@ async function hasRoomNumbers(days) {
 
 
 
-
-
-//function to add month and year on prev and next button
 function prevMonth() {
   month--;
   if (month < 0) {
@@ -247,37 +160,6 @@ prev.addEventListener("click", prevMonth);
 next.addEventListener("click", nextMonth);
 
 initCalendar();
-
-//function to add active on day
-// function addListner() {
-//   const days = document.querySelectorAll(".day");
-//   days.forEach((day) => {
-//     day.addEventListener("click", (e) => {
-//       const selectedDay = e.target.innerHTML;
-      
-//       // Update the global month and year variables
-//       month = month;
-//       year = year;
-      
-//       getActiveDay(selectedDay);
-//       updateEvents(Number(selectedDay));
-//       activeDay = Number(selectedDay);
-      
-//       // Remove active from all days
-//       days.forEach((day) => {
-//         day.classList.remove("active");
-//       });
-      
-//       // If clicked prev-date or next-date, switch to that month
-//       if (e.target.classList.contains("prev-date") || e.target.classList.contains("next-date")) {
-//         initCalendar();
-//       } else {
-//         // Add active to the clicked day
-//         e.target.classList.add("active");
-//       }
-//     });
-//   });
-// }
 
 function addListener() {
   const days = document.querySelectorAll(".day");
@@ -357,100 +239,6 @@ function getActiveDay(date) {
 }
 
 
-// function updateEvents(date) {
-//   // Fetch the room numbers from the event table
-//   const fetchURL = `fetch_events.php?day=${date}&month=${month + 1}&year=${year}`;
-
-//   fetch(fetchURL)
-//     .then((response) => {
-//       if (!response.ok) {
-//         throw new Error(`HTTP error! Status: ${response.status}`);
-//       }
-//       return response.json();
-//     })
-//     .then((data) => {
-//       if (data.error) {
-//         console.error('Error fetching events:', data.error);
-//         eventsContainer.innerHTML = `<div class="no-event">
-//           <h3>Error fetching events</h3>
-//         </div>`;
-//       } else if (data.roomNumbers !== null && data.roomNumbers.length > 0) {
-//         // Display each room number individually
-//         const roomNumbersHTML = data.roomNumbers.map((roomNumber) => `
-//           <div class="event">
-//             <div class="title">
-//               <i class="fas fa-circle"></i>
-//               <h3 class="event-title">Room Number: ${roomNumber}</h3>
-//             </div>
-//           </div>
-//         `).join('');
-
-//         eventsContainer.innerHTML = roomNumbersHTML;
-//       } else {
-//         // If no room numbers found, display an appropriate message
-//         eventsContainer.innerHTML = `<div class="no-event">
-//           <h3>No Room Numbers Available</h3>
-//         </div>`;
-//       }
-//     })
-//     .catch((error) => {
-//       console.error('Error fetching events:', error);
-//       eventsContainer.innerHTML = `<div class="no-event">
-//         <h3>Error fetching events</h3>
-//       </div>`;
-//     });
-// }
-
-
-//function to add event
-
-// function updateEvents(date) {
-//   // Clear the events container
-//   eventsContainer.innerHTML = '';
-
-//   // Fetch the room numbers from the event table
-//   const fetchURL = `fetch_events.php?day=${date}&month=${month + 1}&year=${year}`;
-
-//   fetch(fetchURL)
-//     .then((response) => {
-//       if (!response.ok) {
-//         throw new Error(`HTTP error! Status: ${response.status}`);
-//       }
-//       return response.json();
-//     })
-//     .then((data) => {
-//       if (data.error) {
-//         console.error('Error fetching events:', data.error);
-//         eventsContainer.innerHTML = `<div class="no-event">
-//           <h3>Error fetching events</h3>
-//         </div>`;
-//       } else if (data.roomNumbers !== null && data.roomNumbers.length > 0) {
-//         // Display each room number individually
-//         const roomNumbersHTML = data.roomNumbers.map((roomNumber) => `
-//           <div class="event">
-//             <div class="title">
-//               <i class="fas fa-circle"></i>
-//               <h3 class="event-title">Room Number: ${roomNumber}</h3>
-//             </div>
-//           </div>
-//         `).join('');
-
-//         eventsContainer.innerHTML = roomNumbersHTML;
-//       } else {
-//         // If no room numbers found, display an appropriate message
-//         eventsContainer.innerHTML = `<div class="no-event">
-//           <h3>No Room Numbers Available</h3>
-//         </div>`;
-//       }
-//     })
-//     .catch((error) => {
-//       console.error('Error fetching events:', error);
-//       eventsContainer.innerHTML = `<div class="no-event">
-//         <h3>Error fetching events</h3>
-//       </div>`;
-//     });
-// }
-
 function updateEvents(date) {
   // Clear the events container
   eventsContainer.innerHTML = '';
@@ -478,6 +266,11 @@ function updateEvents(date) {
                 <i class="fas fa-circle"></i>
                 <h3 class="event-title">Room Number: ${roomNumber}</h3>
               </div>
+              <div class="delete-container">
+                <div class="delete-icon" onclick="deleteEvent(${date}, ${month + 1}, ${year}, '${roomNumber}')">
+                  <i class="fas fa-trash"></i>
+                </div>
+              </div>
             </div>
           `).join('');
 
@@ -495,6 +288,9 @@ function updateEvents(date) {
       // Handle error, e.g., display an error message
     });
 }
+
+
+
 
 
 
@@ -540,7 +336,8 @@ addEventTo.addEventListener("input", (e) => {
   }
 });
 
-//function to add event to eventsArr
+
+
 addEventSubmit.addEventListener("click", () => {
   console.log("Add Event button clicked");
 
@@ -578,7 +375,11 @@ addEventSubmit.addEventListener("click", () => {
       console.log("Server response:", data);
       if (data.success) {
         // Event added successfully
-        // Optionally, update the UI or display a success message
+        // Add the "has-event" class to the selected date's element
+        const selectedDateElement = document.querySelector(`.day[data-day="${activeDay}"]`);
+        if (selectedDateElement) {
+          selectedDateElement.classList.add("bigText");
+        }
 
         // Update the eventsArr with the new event
         const newEvent = {
@@ -607,11 +408,6 @@ addEventSubmit.addEventListener("click", () => {
             events: [newEvent],
           });
         }
-
-        // Optionally, close the add event wrapper
-        addEventWrapper.classList.remove("active");
-
-        // Optionally, update the events on the calendar
         updateEvents(activeDay);
       } else {
         // Event addition failed
@@ -629,20 +425,10 @@ addEventSubmit.addEventListener("click", () => {
   addEventTo.value = "";
 });
 
+// ... (your existing code)
 
-//function to save events in local storage
-function saveEvents() {
-  localStorage.setItem("events", JSON.stringify(eventsArr));
-}
 
-//function to get events from local storage
-function getEvents() {
-  //check if events are already saved in local storage then return event else nothing
-  if (localStorage.getItem("events") === null) {
-    return;
-  }
-  eventsArr.push(...JSON.parse(localStorage.getItem("events")));
-}
+
 
 function convertTime(time) {
   //convert time to 24 hour format
@@ -655,22 +441,95 @@ function convertTime(time) {
   return time;
 }
 
+// function deleteEvent(day, month, year, roomNumber) {
+//   // Prompt the user for confirmation before deleting the event
+//   const confirmDelete = confirm("Are you sure you want to delete this event?");
+  
+//   if (!confirmDelete) {
+//     return; // Do nothing if the user cancels the deletion
+//   }
 
-function hasRoomNumbers(date) {
-  const fetchURL = `fetch_events.php?day=${date}&month=${month + 1}&year=${year}`;
+//   // Create a new XMLHttpRequest object
+//   const xhr = new XMLHttpRequest();
 
-  return fetch(fetchURL)
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+//   // Set up the request
+//   xhr.open("POST", "delete_event.php", true);
+//   xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+//   // Define the callback function to handle the response
+//   xhr.onreadystatechange = function() {
+//     if (xhr.readyState === 4) {
+//       if (xhr.status === 200) {
+//         const data = xhr.responseText.trim();
+//         console.log("Server response:", data);
+//         if (data === 'success') {
+//           // Event deleted successfully
+//           // ... (rest of your code)
+//         } else {
+//           // Event deletion failed
+//           alert("Error deleting event. Please try again.");
+//         }
+//       } else {
+//         // Handle errors here (e.g., network issues)
+//         console.error("Error deleting event:", xhr.status, xhr.statusText);
+//       }
+//     }
+//   };
+
+//   // Create the request body with URL-encoded parameters
+//   const requestBody = `day=${day}&month=${month + 1}&year=${year}&roomNumber=${roomNumber}`;
+
+//   // Send the request
+//   xhr.send(requestBody);
+
+// }
+
+function deleteEvent(day, month, year, roomNumber) {
+  // Prompt the user for confirmation before deleting the event
+  const confirmDelete = confirm("Are you sure you want to delete this event?");
+  
+  if (!confirmDelete) {
+    return; // Do nothing if the user cancels the deletion
+  }
+
+  // Create a new XMLHttpRequest object
+  const xhr = new XMLHttpRequest();
+
+  // Set up the request
+  xhr.open("POST", "delete_event.php", true);
+  xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+  // Define the callback function to handle the response
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4) {
+      if (xhr.status === 200) {
+        const data = xhr.responseText.trim();
+        console.log("Server response:", data);
+        if (data === 'success') {
+          // Event deleted successfully
+
+          // Call the callback function if provided
+          if (typeof callback === 'function') {
+            callback();
+          }
+        } else {
+          // Event deletion failed
+          alert("Error deleting event. Please try again.");
+        }
+      } else {
+        // Handle errors here (e.g., network issues)
+        console.error("Error deleting event:", xhr.status, xhr.statusText);
       }
-      return response.json();
-    })
-    .then((data) => {
-      return data.roomNumbers !== null && data.roomNumbers.length > 0;
-    })
-    .catch((error) => {
-      console.error('Error fetching events:', error);
-      return false;
-    });
+    }
+  };
+
+  // Create the request body with URL-encoded parameters
+  const requestBody = `day=${day}&month=${month + 1}&year=${year}&roomNumber=${roomNumber}`;
+
+  // Send the request
+  xhr.send(requestBody);
+  location.reload();
 }
+
+
+
