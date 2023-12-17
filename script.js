@@ -189,85 +189,6 @@ async function initCalendar() {
   addListener();
 }
 
-async function initCalendar() {
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  const prevLastDay = new Date(year, month, 0);
-  const prevDays = prevLastDay.getDate();
-  const lastDate = lastDay.getDate();
-  const day = firstDay.getDay();
-  const nextDays = 7 - lastDay.getDay() - 1;
-
-  date.innerHTML = months[month] + " " + year;
-
-  // Create an array of days in the current month
-  const daysInMonth = Array.from({ length: lastDate }, (_, index) => index + 1);
-
-  // Fetch room numbers for the entire month
-  const roomNumbersAvailable = await hasRoomNumbers(daysInMonth);
-  console.log(roomNumbersAvailable);
-  let days = "";
-
-  for (let x = day; x > 0; x--) {
-    days += `<div class="day prev-date">${prevDays - x + 1}</div>`;
-  }
-
-  for (let i = 1; i <= lastDate; i++) {
-    const roomNumbersAvailableForDay = roomNumbersAvailable[i] || [];
-    let event = false;
-    let eventClass = '';
-
-    eventsArr.forEach((eventObj) => {
-      if (
-        eventObj.day === i &&
-        eventObj.month === month + 1 &&
-        eventObj.year === year
-      ) {
-        event = true;
-      }
-    });
-
-    if (
-      i === new Date().getDate() &&
-      year === new Date().getFullYear() &&
-      month === new Date().getMonth()
-    ) {
-      activeDay = i;
-      getActiveDay(i);
-      updateEvents(i);
-      if (event) {
-        eventClass = 'today active event';
-      } else {
-        eventClass = 'today active';
-      }
-    } else {
-      if (event) {
-        eventClass = 'event';
-      }
-    }
-
-    // Check if there is a single event for the day
-    if (roomNumbersAvailableForDay.length > 0) {
-      eventClass += ' bigText';
-    }
-
-    // Check if there are room numbers available for the day
-    console.log(roomNumbersAvailableForDay.length);
-    if (roomNumbersAvailableForDay.length > 0) {
-      eventClass += ' hasRoomNumbers';
-    }
-
-    days += `<div class="day ${eventClass}" data-day="${i}">${i}</div>`;
-  }
-
-  for (let j = 1; j <= nextDays; j++) {
-    days += `<div class="day next-date">${j}</div>`;
-  }
-
-  daysContainer.innerHTML = days;
-  addListener();
-}
-
 
 
 async function hasRoomNumbers(days) {
@@ -753,5 +674,3 @@ function hasRoomNumbers(date) {
       return false;
     });
 }
-// Update the initCalendar function to apply styles based on room numbers
-
