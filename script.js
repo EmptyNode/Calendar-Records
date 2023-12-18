@@ -12,9 +12,11 @@ const calendar = document.querySelector(".calendar"),
   addEventBtn = document.querySelector(".add-event"),
   addEventWrapper = document.querySelector(".add-event-wrapper "),
   addEventCloseBtn = document.querySelector(".close "),
-  addEventTitle = document.querySelector(".event-name "),
-  addEventFrom = document.querySelector(".event-time-from "),
-  addEventTo = document.querySelector(".event-time-to "),
+
+  // addEventTitle = document.querySelector(".event-name "),
+  // addEventFrom = document.querySelector(".event-time-from "),
+  // addEventTo = document.querySelector(".event-time-to "),
+
   addEventSubmit = document.querySelector(".add-event-btn ");
 
 let today = new Date();
@@ -310,81 +312,80 @@ document.addEventListener("click", (e) => {
 });
 
 //allow 50 chars in eventtitle
-addEventTitle.addEventListener("input", (e) => {
-  addEventTitle.value = addEventTitle.value.slice(0, 60);
-});
+// addEventTitle.addEventListener("input", (e) => {
+//   addEventTitle.value = addEventTitle.value.slice(0, 60);
+// });
 
 
 //allow only time in eventtime from and to
-addEventFrom.addEventListener("input", (e) => {
-  addEventFrom.value = addEventFrom.value.replace(/[^0-9:]/g, "");
-  if (addEventFrom.value.length === 2) {
-    addEventFrom.value += ":";
-  }
-  if (addEventFrom.value.length > 5) {
-    addEventFrom.value = addEventFrom.value.slice(0, 5);
-  }
-});
 
-addEventTo.addEventListener("input", (e) => {
-  addEventTo.value = addEventTo.value.replace(/[^0-9:]/g, "");
-  if (addEventTo.value.length === 2) {
-    addEventTo.value += ":";
-  }
-  if (addEventTo.value.length > 5) {
-    addEventTo.value = addEventTo.value.slice(0, 5);
-  }
-});
+// addEventFrom.addEventListener("input", (e) => {
+//   addEventFrom.value = addEventFrom.value.replace(/[^0-9:]/g, "");
+//   if (addEventFrom.value.length === 2) {
+//     addEventFrom.value += ":";
+//   }
+//   if (addEventFrom.value.length > 5) {
+//     addEventFrom.value = addEventFrom.value.slice(0, 5);
+//   }
+// });
+
+// addEventTo.addEventListener("input", (e) => {
+//   addEventTo.value = addEventTo.value.replace(/[^0-9:]/g, "");
+//   if (addEventTo.value.length === 2) {
+//     addEventTo.value += ":";
+//   }
+//   if (addEventTo.value.length > 5) {
+//     addEventTo.value = addEventTo.value.slice(0, 5);
+//   }
+// });
 
 
 
 addEventSubmit.addEventListener("click", () => {
   console.log("Add Event button clicked");
 
-  // Validate the form fields
-  const eventTitle = addEventTitle.value;
-  const eventTimeFrom = addEventFrom.value;
-  const eventTimeTo = addEventTo.value;
+  const roomNumber = document.querySelector(".event-name[placeholder='Room No']").value;
+    const bookingDate = document.getElementById("bookingDate").value;
+    const departureDate = document.getElementById("departureDate").value;
+    const memberPhone = document.querySelector(".event-name[placeholder='Member Phone']").value;
+    const memberCode = document.querySelector(".event-name[placeholder='Member Code']").value;
+    const memberName = document.querySelector(".event-name[placeholder='Member Name']").value;
+    
 
-  if (eventTitle === "" || eventTimeFrom === "" || eventTimeTo === "") {
-    alert("Please fill all the fields");
-    return;
-  }
+    if (bookingDate === "" || departureDate === "" || memberName === "" || memberPhone === "" || memberCode === "") {
+      alert("Please fill all the fields");
+      return;
+    }
 
-  // Your existing time validation code...
+    // Your existing time validation code...
 
-  // Create a FormData object to send data in the POST request
-  const formData = new FormData();
-  formData.append("eventTitle", eventTitle);
-  formData.append("eventTimeFrom", eventTimeFrom);
-  formData.append("eventTimeTo", eventTimeTo);
+    // Create a FormData object to send data in the POST request
+    const formData = new FormData();
+    formData.append("roomNumber", roomNumber);
+    formData.append("bookingDate", bookingDate);
+    formData.append("departureDate", departureDate);
+    formData.append("memberName", memberName);
+    formData.append("memberPhone", memberPhone);
+    formData.append("memberCode", memberCode);
 
-  // Append the selected date to the FormData
-  formData.append(
-    "selectedDate",
-    activeDay + "/" + (month + 1) + "/" + year
-  );
+    // Append the selected date to the FormData
+    formData.append(
+      "clickedDay",
+      activeDay + "/" + (month + 1) + "/" + year
+    );
 
-  // Make a POST request to the server
-  fetch("add_events.php", {
-    method: "POST",
-    body: formData,
-  })
+    // Make a POST request to the server
+    fetch("add_events.php", {
+      method: "POST",
+      body: formData,
+    })
     .then((response) => response.json())
     .then((data) => {
       console.log("Server response:", data);
       if (data.success) {
-        // Event added successfully
-        // Add the "has-event" class to the selected date's element
-        const selectedDateElement = document.querySelector(`.day[data-day="${activeDay}"]`);
-        if (selectedDateElement) {
-          selectedDateElement.classList.add("bigText");
-        }
-
-        // Update the eventsArr with the new event
         const newEvent = {
-          title: eventTitle,
-          time: eventTimeFrom + " - " + eventTimeTo,
+          title: roomNumber,
+          time: activeDay + " - " + departureDate,
         };
         let eventAdded = false;
         if (eventsArr.length > 0) {
@@ -408,6 +409,11 @@ addEventSubmit.addEventListener("click", () => {
             events: [newEvent],
           });
         }
+
+        // Optionally, close the add event wrapper
+        addEventWrapper.classList.remove("active");
+
+        // Optionally, update the events on the calendar
         updateEvents(activeDay);
       } else {
         // Event addition failed
@@ -419,10 +425,13 @@ addEventSubmit.addEventListener("click", () => {
       // Optionally, display an error message to the user
     });
 
-  // Clear the form fields
-  addEventTitle.value = "";
-  addEventFrom.value = "";
-  addEventTo.value = "";
+    // Clear the form fields
+    document.getElementById("bookingDate").value = "";
+    document.getElementById("departureDate").value = "";
+    document.querySelector(".event-name[placeholder='Member Name']").value = "";
+    document.querySelector(".event-name[placeholder='Member Phone']").value = "";
+    document.querySelector(".event-name[placeholder='Member Code']").value = "";
+  
 });
 
 // ... (your existing code)
@@ -486,8 +495,8 @@ function convertTime(time) {
 
 function deleteEvent(day, month, year, roomNumber) {
   // Prompt the user for confirmation before deleting the event
+  console.log(roomNumber);
   const confirmDelete = confirm("Are you sure you want to delete this event?");
-  
   if (!confirmDelete) {
     return; // Do nothing if the user cancels the deletion
   }
@@ -528,7 +537,7 @@ function deleteEvent(day, month, year, roomNumber) {
 
   // Send the request
   xhr.send(requestBody);
-  location.reload();
+  
 }
 
 
