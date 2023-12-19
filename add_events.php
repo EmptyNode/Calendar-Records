@@ -6,6 +6,7 @@ include 'db_conn.php';
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $roomNumber = $_POST["roomNumber"];
+    // $roomType = $_POST["roomType"];
     $bookingDate = $_POST["bookingDate"];
     $departureDate = $_POST["departureDate"];
     $memberName = $_POST["memberName"];

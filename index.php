@@ -63,8 +63,20 @@
           </div>
             <div class="add-event-body">
               <div class="add-event-input">
-                <input type="text" placeholder="Room No" class="event-name" />
+                <select placeholder="Select Room" class="room-name" name="roomNumber" id="roomNumber">
+                  <option value="1">Room 1</option>
+                  <option value="2">Room 2</option>
+                  <option value="3">Room 3</option>
+                  <option value="4">Room 4</option>
+                  <option value="5">Room 5</option>
+                </select>
+                <!-- <div class="add-event-footer add-room-btn">
+                  <button class="add-event-btn">Add Room</button>
+                </div> -->
               </div>
+              <!-- <div class="add-event-input">
+                <input type="text" placeholder="Room Type" class="room-type" id="roomType"/>
+              </div> -->
               <div class="add-event-input">
                 <input placeholder="Booking Date" class="textbox-n" type="text" onfocus="(this.type='date')" onblur="(this.type='text')" id="bookingDate" />
               </div>
@@ -72,17 +84,17 @@
                 <input placeholder="Departure Date" class="textbox-n" type="text" onfocus="(this.type='date')" onblur="(this.type='text')" id="departureDate" />
               </div>
               <div class="add-event-input">
-                <input type="text" placeholder="Member Name" class="event-name" id="memberName"/>
+                <input type="text" placeholder="Member Name" class="member-name" id="memberName"/>
               </div>
               <div class="add-event-input">
-                <input type="text" placeholder="Member Phone" class="event-name" id="memberPhone"/>
+                <input type="text" placeholder="Member Phone" class="member-phone" id="memberPhone"/>
               </div>
               <div class="add-event-input">
-                <input type="text" placeholder="Member Code" class="event-name" id="memberCode"/>
+                <input type="text" placeholder="Member Code" class="member-code" id="memberCode"/>
               </div>
             </div>
             <div class="add-event-footer">
-              <button class="add-event-btn">Book</button>
+              <button class="add-event-btn" id="book">Book</button>
             </div>
         </div>
       </div>
