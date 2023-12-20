@@ -12,13 +12,30 @@ if ($conn->connect_error) {
 }
 
 try {
-    // Query to fetch roomtype and roomnumber from the roomdetails table
-    $query = "SELECT roomtype, roomnumber FROM roomdetails";
+    // Get the clickedDay from the query parameters
+    $clickedDay = $_GET['clickedDay'];
+
+    // Extract day, month, and year from the clickedDay
+    list($day, $month, $year) = explode('/', $clickedDay);
+
+    // Format the date as 'YYYY-MM-DD'
+    $formattedDate = sprintf('%04d-%02d-%02d', $year, $month, $day);
+
+    // Query to fetch roomnumber and roomtype from roomdetails
+    // where arrivaldate does not match clickedDay or there is no corresponding row in the event table
+    $query = "SELECT rd.roomnumber, rd.roomtype
+              FROM roomdetails rd
+              LEFT JOIN guesthousebooking e ON rd.roomnumber = e.roomnumber AND e.arrivaldate = ?
+              WHERE e.roomnumber IS NULL OR (e.arrivaldate IS NOT NULL AND e.arrivaldate != ?)";
 
     // Use prepared statement to prevent SQL injection
     $statement = $conn->prepare($query);
 
     if ($statement) {
+        // Bind the parameters
+        $statement->bind_param('ss', $formattedDate, $formattedDate);
+
+        // Execute the statement
         $statement->execute();
 
         // Get the result set
@@ -37,6 +54,9 @@ try {
         // Output the JSON response
         header('Content-Type: application/json');
         echo json_encode($response);
+
+        // Close the result set
+        $result->close();
     } else {
         // If an error occurred in preparing the statement, return an error message
         header('Content-Type: application/json');

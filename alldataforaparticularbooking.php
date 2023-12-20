@@ -23,7 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
 
     // Use prepared statement to prevent SQL injection
     $sql = "SELECT roomnumber, arrivaldate, departuredate, memname, memphone, memcode, bookingdate 
-            FROM event 
+            FROM guesthousebooking 
             WHERE bookingid = ?";
     $stmt = $conn->prepare($sql);
 

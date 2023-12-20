@@ -26,7 +26,7 @@ $lastDay = date('Y-m-t', strtotime($firstDay));
 $allDays = range(1, date('t', strtotime($firstDay)));
 
 // Use prepared statements to prevent SQL injection
-$sql = "SELECT DAY(arrivaldate) as day, COUNT(roomnumber) as roomCount FROM event WHERE arrivaldate BETWEEN ? AND ? GROUP BY DAY(arrivaldate)";
+$sql = "SELECT DAY(arrivaldate) as day, COUNT(roomnumber) as roomCount FROM guesthousebooking WHERE arrivaldate BETWEEN ? AND ? GROUP BY DAY(arrivaldate)";
 $stmt = $conn->prepare($sql);
 
 if ($stmt) {

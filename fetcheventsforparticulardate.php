@@ -21,7 +21,7 @@ if (!is_numeric($day) || !is_numeric($month) || !is_numeric($year)) {
 }
 
 // Use prepared statement to prevent SQL injection
-$sql = "SELECT bookingid, roomnumber, memname, memphone FROM event WHERE DAY(arrivaldate) = ? AND MONTH(arrivaldate) = ? AND YEAR(arrivaldate) = ?";
+$sql = "SELECT bookingid, roomnumber, memname, memphone, departuredate, arrivaldate FROM guesthousebooking WHERE DAY(arrivaldate) = ? AND MONTH(arrivaldate) = ? AND YEAR(arrivaldate) = ?";
 $stmt = $conn->prepare($sql);
 
 if ($stmt) {

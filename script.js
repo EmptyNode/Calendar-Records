@@ -20,7 +20,9 @@ addEventCloseBtn = document.querySelector(".close "),
 addEventSubmit = document.querySelector(".add-event-btn");
 addRoomBtn = document.querySelector('.add-room-btn');
 selectRoom = document.querySelector('.select-room');
-console.log(selectRoom);
+// const clickedSelect = document.querySelectorAll(".calendar .days .day");
+// console.log(clickedSelect);
+
 
 let today = new Date();
 let activeDay;
@@ -267,18 +269,21 @@ function updateEvents(date) {
         console.log(data);
         if (data.bookingData !== null && data.bookingData.length > 0) {
           const roomNumbersHTML = data.bookingData.map((booking) => `
-            <div class="event" onclick="showEventDetails(${date}, ${month + 1}, ${year}, '${booking.roomnumber}', '${booking.bookingid}')">
-              <div class="event-container">
-                <div class="title">
+            <div class="event">
+              <div class="event-container" >
+                <div onclick="showEventDetails(${date}, ${month + 1}, ${year}, '${booking.roomnumber}', '${booking.bookingid}')">
+                  <div class="title" >
                   <i class="fas fa-circle"></i>
                   <h3 class="event-title">Room Number: ${booking.roomnumber}</h3>
                   <h3 class="event-title">Member Name: ${booking.memname}</h3>
                   <h3 class="event-title">Contact No: ${booking.memphone}</h3>
+                  <h3 class="event-title">Contact No: ${booking.arrivaldate}</h3>
+                </div>
                 </div>
 
                 <div class="delete-container">
                   <div class="delete-icon">
-                    <i class="fas fa-trash" onclick="deleteEvent(${date}, ${month + 1}, ${year}, '${booking.roomnumber}')"></i>
+                    <i class="fas fa-trash" onclick="deleteEvent('${booking.arrivaldate}', '${booking.roomnumber}', '${booking.departuredate}')"></i>
                   </div>
                 </div>
               </div>
@@ -351,13 +356,27 @@ document.addEventListener("click", (e) => {
   }
 });
 
-
 addRoomBtn.addEventListener('click', async function () {
   // Get the entered room number and room type
-  const newRoomNumber = prompt('Enter Room Number');
+  let newRoomNumber;
+  do {
+    const roomNumberInput = prompt('Enter Room Number');
+
+    // Check if the user clicked "Cancel"
+    if (roomNumberInput === null) {
+      return; // Cancel the operation
+    }
+
+    newRoomNumber = parseInt(roomNumberInput);
+
+    if (isNaN(newRoomNumber)) {
+      alert('Please enter a valid integer for the room number.');
+    }
+  } while (isNaN(newRoomNumber));
+
   const newRoomType = prompt('Enter Room Type');
 
-  if (newRoomNumber && newRoomType) {
+  if (newRoomType !== null) {
     try {
       // Add the new room
       const response = await fetch('addroom.php', {
@@ -381,36 +400,15 @@ addRoomBtn.addEventListener('click', async function () {
   }
 });
 
-function updateSelectRooms(roomDetails) {
-  // Clear existing options
-  selectRoom.innerHTML = '';
-
-  // Check if the data retrieval was successful
-  if (roomDetails.success && roomDetails.data) {
-    // Iterate through the data and add options to the select element
-    roomDetails.data.forEach(room => {
-      const option = document.createElement('option');
-      option.value = room.roomnumber;
-      option.text = `${room.roomtype} - ${room.roomnumber}`;
-      selectRoom.appendChild(option);
-    });
-  } else {
-    // Handle the case where data retrieval was not successful
-    console.error('Error retrieving room details:', roomDetails.message);
-  }
-}
 
 // Function to fetch and update rooms and room types
 async function fetchRoomsAndTypes() {
   try {
-    const response = await fetch('fetchrooms.php', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        // Add any additional headers if needed
-      },
-      // You can include credentials: 'include' if you need to send cookies
-    });
+    var day1 = activeDay;
+    var month1 = month+1;
+    var year1 = year;
+    const queryString = `?clickedDay=${day1}/${month1}/${year1}`;
+    const response = await fetch(`fetchrooms.php${queryString}`);
 
     if (!response.ok) {
       throw new Error(`Error: ${response.status} ${response.statusText}`);
@@ -428,6 +426,26 @@ async function fetchRoomsAndTypes() {
   } catch (error) {
     console.error('Error:', error.message);
     return null;
+  }
+}
+
+
+function updateSelectRooms(roomDetails) {
+  // Clear existing options
+  selectRoom.innerHTML = '';
+
+  // Check if the data retrieval was successful
+  if (roomDetails.success && roomDetails.data) {
+    // Iterate through the data and add options to the select element
+    roomDetails.data.forEach(room => {
+      const option = document.createElement('option');
+      option.value = room.roomnumber;
+      option.text = `${room.roomtype} - ${room.roomnumber}`;
+      selectRoom.appendChild(option);
+    });
+  } else {
+    // Handle the case where data retrieval was not successful
+    console.error('Error retrieving room details:', roomDetails.message);
   }
 }
 
@@ -477,38 +495,10 @@ addEventSubmit.addEventListener("click", () => {
     .then((data) => {
       console.log("Server response:", data);
       if (data.success) {
-        const newEvent = {
-          title: roomNumber,
-          time: activeDay + " - " + departureDate,
-        };
-        let eventAdded = false;
-        if (eventsArr.length > 0) {
-          eventsArr.forEach((item) => {
-            if (
-              item.day === activeDay &&
-              item.month === month + 1 &&
-              item.year === year
-            ) {
-              item.events.push(newEvent);
-              eventAdded = true;
-            }
-          });
-        }
-
-        if (!eventAdded) {
-          eventsArr.push({
-            day: activeDay,
-            month: month + 1,
-            year: year,
-            events: [newEvent],
-          });
-        }
-
-        // Optionally, close the add event wrapper
         addEventWrapper.classList.remove("active");
+        initCalendar();
 
-        // Optionally, update the events on the calendar
-        updateEvents(activeDay);
+        // clickedSelect.classList.add('bigtext');
       } else {
         // Event addition failed
         alert("Error adding event: " + data.message);
@@ -520,14 +510,15 @@ addEventSubmit.addEventListener("click", () => {
     });
 
     // Clear the form fields
-    // document.getElementById("roomNumber").value="";
-    document.getElementById("bookingDate").value = "";
-    document.getElementById("departureDate").value = "";
-    document.querySelector(".add-event-input[placeholder='Member Name']").value = "";
-    document.querySelector(".event-name[placeholder='Member Phone']").value = "";
-    document.querySelector(".event-name[placeholder='Member Code']").value = "";
+    document.getElementById("roomNumber").value="";
+    document.getElementById("bookingDate").value="";
+    document.getElementById("departureDate").value="";
+    document.querySelector(".member-phone[placeholder='Member Phone']").value="";
+    document.querySelector(".member-code[placeholder='Member Code']").value="";
+    document.querySelector(".member-name[placeholder='Member Name']").value="";
   
 });
+
 
 
 function formatDate(rawDate) {
@@ -596,52 +587,52 @@ function convertTime(time) {
 
 // }
 
-function deleteEvent(day, month, year, roomNumber) {
-  // Prompt the user for confirmation before deleting the event
-  console.log(roomNumber);
+async function deleteEvent(arrivaldate, roomnumber, departuredate) {
   const confirmDelete = confirm("Are you sure you want to delete this event?");
   if (!confirmDelete) {
-    return; // Do nothing if the user cancels the deletion
+    return;
   }
 
-  // Create a new XMLHttpRequest object
-  const xhr = new XMLHttpRequest();
+  try {
+    const response = await fetch("delete_event.php", {
+      method: "POST",
+      headers: {
+        "Content-type": "application/x-www-form-urlencoded",
+      },
+      body: `arrivaldate=${arrivaldate}&roomnumber=${roomnumber}&departuredate=${departuredate}`,
+    });
 
-  // Set up the request
-  xhr.open("POST", "delete_event.php", true);
-  xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-
-  // Define the callback function to handle the response
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState === 4) {
-      if (xhr.status === 200) {
-        const data = xhr.responseText.trim();
-        console.log("Server response:", data);
-        if (data === 'success') {
-          // Event deleted successfully
-
-          // Call the callback function if provided
-          if (typeof callback === 'function') {
-            callback();
-          }
-        } else {
-          // Event deletion failed
-          alert("Error deleting event. Please try again.");
-        }
-      } else {
-        // Handle errors here (e.g., network issues)
-        console.error("Error deleting event:", xhr.status, xhr.statusText);
-      }
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
     }
-  };
 
-  // Create the request body with URL-encoded parameters
-  const requestBody = `day=${day}&month=${month + 1}&year=${year}&roomNumber=${roomNumber}`;
+    const responseData = await response.json();
+    console.log("Server response:", responseData);
 
-  // Send the request
-  xhr.send(requestBody);
+    if (responseData.success) {
+      // Event deleted successfully
+      alert("Event deleted successfully.");
+
+      // Update the calendar after successful deletion
+      month = month; // Retain the current month
+      year = year; // Retain the current year
+      initCalendar();
+    } else {
+      // Event deletion failed
+      alert(`Error deleting event. Please try again. Server message: ${responseData.message}`);
+    }
+  }catch (error) {
+    console.error("Error deleting event:", error.message);
+  
+    // Log the entire response to understand the issue
+    console.log("Full response:", await response.text());
+  }
   
 }
+
+
+
+
 
 
 

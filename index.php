@@ -94,6 +94,7 @@
               <button class="add-event-btn" id="book">Book</button>
             </div>
         </div>
+        
       </div>
       <button class="add-event">
         <i class="fas fa-plus"></i>
