@@ -13,7 +13,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $memberPhone = $_POST["memberPhone"];
     $memberCode = $_POST["memberCode"];
     $clickedDay = $_POST["clickedDay"];
-
     $arrivaldate = date("Y-m-d", strtotime(str_replace("/", "-", $clickedDay)));
 
     try {

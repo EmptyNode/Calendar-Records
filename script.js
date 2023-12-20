@@ -18,9 +18,9 @@ addEventCloseBtn = document.querySelector(".close "),
   // addEventTo = document.querySelector(".event-time-to "),
 
 addEventSubmit = document.querySelector(".add-event-btn");
-// const addRoomBtn = document.querySelector('.add-room-btn button');
-// const roomNumberInput = document.getElementById('roomNumber');
-console.log(addEventSubmit);
+addRoomBtn = document.querySelector('.add-room-btn');
+selectRoom = document.querySelector('.select-room');
+console.log(selectRoom);
 
 let today = new Date();
 let activeDay;
@@ -277,8 +277,8 @@ function updateEvents(date) {
                 </div>
 
                 <div class="delete-container">
-                  <div class="delete-icon" onclick="deleteEvent(${date}, ${month + 1}, ${year}, '${booking.roomnumber}')">
-                    <i class="fas fa-trash"></i>
+                  <div class="delete-icon">
+                    <i class="fas fa-trash" onclick="deleteEvent(${date}, ${month + 1}, ${year}, '${booking.roomnumber}')"></i>
                   </div>
                 </div>
               </div>
@@ -334,8 +334,11 @@ function showEventDetails(date, month, year, roomNumber, bookingid) {
 
 
 
-addEventBtn.addEventListener("click", () => {
+addEventBtn.addEventListener("click", async () => {
   addEventWrapper.classList.toggle("active");
+  const roomDetails = await fetchRoomsAndTypes();
+  // console.log(roomDetails);
+  updateSelectRooms(roomDetails);
 });
 
 addEventCloseBtn.addEventListener("click", () => {
@@ -349,25 +352,94 @@ document.addEventListener("click", (e) => {
 });
 
 
-// addRoomBtn.addEventListener('click', function () {
-//   // Get the entered room number
-//   const newRoomNumber = prompt('Enter Room Number');
+addRoomBtn.addEventListener('click', async function () {
+  // Get the entered room number and room type
+  const newRoomNumber = prompt('Enter Room Number');
+  const newRoomType = prompt('Enter Room Type');
 
-//   if (newRoomNumber) {
-//     // Create a new option element
-//     const option = document.createElement('option');
-//     option.value = newRoomNumber;
-//     option.text = 'Room ' + newRoomNumber;
+  if (newRoomNumber && newRoomType) {
+    try {
+      // Add the new room
+      const response = await fetch('addroom.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'roomNumber=' + encodeURIComponent(newRoomNumber) + '&roomType=' + encodeURIComponent(newRoomType),
+      });
 
-//     // Add the new option to the dropdown menu
-//     roomNumberInput.add(option);
-//   }
-// });
+      const data = await response.text();
+      console.log(data); // Display response from the PHP script
+
+      // Fetch and update rooms and room types
+      const roomDetails = await fetchRoomsAndTypes();
+      console.log(roomDetails);
+      updateSelectRooms(roomDetails);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+});
+
+function updateSelectRooms(roomDetails) {
+  // Clear existing options
+  selectRoom.innerHTML = '';
+
+  // Check if the data retrieval was successful
+  if (roomDetails.success && roomDetails.data) {
+    // Iterate through the data and add options to the select element
+    roomDetails.data.forEach(room => {
+      const option = document.createElement('option');
+      option.value = room.roomnumber;
+      option.text = `${room.roomtype} - ${room.roomnumber}`;
+      selectRoom.appendChild(option);
+    });
+  } else {
+    // Handle the case where data retrieval was not successful
+    console.error('Error retrieving room details:', roomDetails.message);
+  }
+}
+
+// Function to fetch and update rooms and room types
+async function fetchRoomsAndTypes() {
+  try {
+    const response = await fetch('fetchrooms.php', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        // Add any additional headers if needed
+      },
+      // You can include credentials: 'include' if you need to send cookies
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    if (data.success) {
+      const rooms = data.data;
+      return data;
+    } else {
+      console.error('Error fetching data:', data.message);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error:', error.message);
+    return null;
+  }
+}
+
+
+
+
 
 addEventSubmit.addEventListener("click", () => {
     console.log("Add Event button clicked");
 
     const roomNumber = document.getElementById("roomNumber").value;
+    console.log(roomNumber + "hello bello");
     let bookingDate = document.getElementById("bookingDate").value;
     let departureDate = document.getElementById("departureDate").value;
     const memberPhone = document.querySelector(".member-phone[placeholder='Member Phone']").value;

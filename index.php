@@ -63,16 +63,13 @@
           </div>
             <div class="add-event-body">
               <div class="add-event-input">
-                <select placeholder="Select Room" class="room-name" name="roomNumber" id="roomNumber">
+                <select placeholder="Select Room" class="select-room" name="roomNumber" id="roomNumber">
                   <option value="1">Room 1</option>
                   <option value="2">Room 2</option>
                   <option value="3">Room 3</option>
                   <option value="4">Room 4</option>
                   <option value="5">Room 5</option>
                 </select>
-                <!-- <div class="add-event-footer add-room-btn">
-                  <button class="add-event-btn">Add Room</button>
-                </div> -->
               </div>
               <!-- <div class="add-event-input">
                 <input type="text" placeholder="Room Type" class="room-type" id="roomType"/>
@@ -101,6 +98,9 @@
       <button class="add-event">
         <i class="fas fa-plus"></i>
       </button>
+      <div class="add-room">
+        <button class="add-room-btn">Add Room</button>
+      </div>
     </div>
     
     <script src="script.js"></script>
