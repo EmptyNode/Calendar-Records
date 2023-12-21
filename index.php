@@ -58,36 +58,50 @@
         <div class="events"></div>
         <div class="add-event-wrapper">
           <div class="add-event-header">
-            <div class="title">Add Event</div>
+            <div class="title">Book Room</div>
             <i class="fas fa-times close"></i>
           </div>
-          <div class="add-event-body">
-            <div class="add-event-input">
-              <input type="text" placeholder="Event Name" class="event-name" />
+            <div class="add-event-body">
+              <div class="add-event-input">
+                <select placeholder="Select Room" class="select-room" name="roomNumber" id="roomNumber">
+                  <option value="1">Room 1</option>
+                  <option value="2">Room 2</option>
+                  <option value="3">Room 3</option>
+                  <option value="4">Room 4</option>
+                  <option value="5">Room 5</option>
+                </select>
+              </div>
+              <!-- <div class="add-event-input">
+                <input type="text" placeholder="Room Type" class="room-type" id="roomType"/>
+              </div> -->
+              <div class="add-event-input">
+                <input placeholder="Booking Date" class="textbox-n" type="text" onfocus="(this.type='date')" onblur="(this.type='text')" id="bookingDate" />
+              </div>
+              <div class="add-event-input">
+                <input placeholder="Departure Date" class="textbox-n" type="text" onfocus="(this.type='date')" onblur="(this.type='text')" id="departureDate" />
+              </div>
+              <div class="add-event-input">
+                <input type="text" placeholder="Member Name" class="member-name" id="memberName"/>
+              </div>
+              <div class="add-event-input">
+                <input type="text" placeholder="Member Phone" class="member-phone" id="memberPhone"/>
+              </div>
+              <div class="add-event-input">
+                <input type="text" placeholder="Member Code" class="member-code" id="memberCode"/>
+              </div>
             </div>
-            <div class="add-event-input">
-              <input
-                type="text"
-                placeholder="Event Time From"
-                class="event-time-from"
-              />
+            <div class="add-event-footer">
+              <button class="add-event-btn" id="book">Book</button>
             </div>
-            <div class="add-event-input">
-              <input
-                type="text"
-                placeholder="Event Time To"
-                class="event-time-to"
-              />
-            </div>
-          </div>
-          <div class="add-event-footer">
-            <button class="add-event-btn">Add Event</button>
-          </div>
         </div>
+        
       </div>
       <button class="add-event">
         <i class="fas fa-plus"></i>
       </button>
+      <div class="add-room">
+        <button class="add-room-btn">Add Room</button>
+      </div>
     </div>
     
     <script src="script.js"></script>

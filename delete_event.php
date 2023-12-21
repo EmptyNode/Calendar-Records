@@ -1,32 +1,45 @@
 <?php
+
 include 'db_conn.php';
 
-$conn = new mysqli($servername, $username, $password, $dbname);
+// Set the content type to JSON
+header('Content-Type: application/json');  // Line added
 
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+// Check if the form is submitted using POST
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    try {
+        $roomnumber = $_POST["roomnumber"];
+        $departuredate = $_POST["departuredate"];
+        $arrivaldate = $_POST["arrivaldate"];
 
-// Get data from the client-side (JavaScript)
-$day = $_POST['day'];
-$month = $_POST['month'];
-$year = $_POST['year'];
-$roomNumber = $_POST['eventTitle'];
+        // Use a loop to delete rows for each arrival date
+        while (strtotime($arrivaldate) <= strtotime($departuredate)) {
+            // Prepare SQL statement
+            $stmt = $conn->prepare("DELETE FROM guesthousebooking WHERE roomnumber = :roomnumber AND arrivaldate = :arrivaldate");
+        
+            // Bind parameters
+            $stmt->bindParam(':roomnumber', $roomnumber);
+            $stmt->bindParam(':arrivaldate', $arrivaldate);
+        
+            // Execute the statement
+            $stmt->execute();
+        
+            // Increment the date by one day
+            $arrivaldate = date("Y-m-d", strtotime($arrivaldate . ' +1 day'));
+        }
 
-// Create formatted date in "YYYY-MM-DD" format
-$arrivalday = date("Y-m-d", mktime(0, 0, 0, $month, $day, $year));
-
-// Use prepared statement to prevent SQL injection
-$stmt = $conn->prepare("DELETE FROM events WHERE arrivalday = ? AND roomnumber = ?");
-$stmt->bind_param("ss", $arrivalday, $roomNumber); // Corrected this line
-
-if ($stmt->execute()) {
-    echo json_encode(["success" => true]);
+        $response = ["success" => true, "message" => "Events deleted successfully"];
+        echo json_encode($response);
+    } catch (PDOException $e) {
+        $response = ["success" => false, "message" => "Error: " . $e->getMessage()];
+        echo json_encode($response);
+    } finally {
+        // Close the database connection
+        $conn = null;
+    }
 } else {
-    echo json_encode(["success" => false, "message" => "Error deleting event: " . $stmt->error]);
+    // Invalid request method
+    $response = ["success" => false, "message" => "Invalid request method"];
+    echo json_encode($response);
 }
-
-$stmt->close();
-$conn->close();
 ?>
