@@ -1,23 +1,28 @@
 const calendar = document.querySelector(".calendar"),
-  date = document.querySelector(".date"),
-  daysContainer = document.querySelector(".days"),
-  prev = document.querySelector(".prev"),
-  next = document.querySelector(".next"),
-  todayBtn = document.querySelector(".today-btn"),
-  gotoBtn = document.querySelector(".goto-btn"),
-  dateInput = document.querySelector(".date-input"),
-  eventDay = document.querySelector(".event-day"),
-  eventDate = document.querySelector(".event-date"),
-  eventsContainer = document.querySelector(".events"),
-  addEventBtn = document.querySelector(".add-event"),
-  addEventWrapper = document.querySelector(".add-event-wrapper "),
-  addEventCloseBtn = document.querySelector(".close "),
+date = document.querySelector(".date"),
+daysContainer = document.querySelector(".days"),
+prev = document.querySelector(".prev"),
+next = document.querySelector(".next"),
+todayBtn = document.querySelector(".today-btn"),
+gotoBtn = document.querySelector(".goto-btn"),
+dateInput = document.querySelector(".date-input"),
+eventDay = document.querySelector(".event-day"),
+eventDate = document.querySelector(".event-date"),
+eventsContainer = document.querySelector(".events"),
+addEventBtn = document.querySelector(".add-event"),
+addEventWrapper = document.querySelector(".add-event-wrapper "),
+addEventCloseBtn = document.querySelector(".close "),
 
   // addEventTitle = document.querySelector(".event-name "),
   // addEventFrom = document.querySelector(".event-time-from "),
   // addEventTo = document.querySelector(".event-time-to "),
 
-  addEventSubmit = document.querySelector(".add-event-btn ");
+addEventSubmit = document.querySelector(".add-event-btn");
+addRoomBtn = document.querySelector('.add-room-btn');
+selectRoom = document.querySelector('.select-room');
+// const clickedSelect = document.querySelectorAll(".calendar .days .day");
+// console.log(clickedSelect);
+
 
 let today = new Date();
 let activeDay;
@@ -261,16 +266,25 @@ function updateEvents(date) {
         // Handle error, e.g., display an error message
       } else {
         // Display each room number individually
-        if (data.roomNumbers !== null && data.roomNumbers.length > 0) {
-          const roomNumbersHTML = data.roomNumbers.map((roomNumber) => `
+        console.log(data);
+        if (data.bookingData !== null && data.bookingData.length > 0) {
+          const roomNumbersHTML = data.bookingData.map((booking) => `
             <div class="event">
-              <div class="title">
-                <i class="fas fa-circle"></i>
-                <h3 class="event-title">Room Number: ${roomNumber}</h3>
-              </div>
-              <div class="delete-container">
-                <div class="delete-icon" onclick="deleteEvent(${date}, ${month + 1}, ${year}, '${roomNumber}')">
-                  <i class="fas fa-trash"></i>
+              <div class="event-container" >
+                <div onclick="showEventDetails(${date}, ${month + 1}, ${year}, '${booking.roomnumber}', '${booking.bookingid}')">
+                  <div class="title" >
+                  <i class="fas fa-circle"></i>
+                  <h3 class="event-title">Room Number: ${booking.roomnumber}</h3>
+                  <h3 class="event-title">Member Name: ${booking.memname}</h3>
+                  <h3 class="event-title">Contact No: ${booking.memphone}</h3>
+                  <h3 class="event-title">Contact No: ${booking.arrivaldate}</h3>
+                </div>
+                </div>
+
+                <div class="delete-container">
+                  <div class="delete-icon">
+                    <i class="fas fa-trash" onclick="deleteEvent('${booking.arrivaldate}', '${booking.roomnumber}', '${booking.departuredate}')"></i>
+                  </div>
                 </div>
               </div>
             </div>
@@ -292,13 +306,44 @@ function updateEvents(date) {
 }
 
 
+function showEventDetails(date, month, year, roomNumber, bookingid) {
+  // Fetch event details using another API endpoint or method
+  const memberDetailsURL = `alldataforaparticularbooking.php?day=${date}&month=${month + 1}&year=${year}&roomNumber=${roomNumber}&bookingid=${bookingid}`;
+
+  fetch(memberDetailsURL)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      if (data.events && data.events.length > 0) {
+        const eventDetails = data.events[0]; // Assuming there's only one event in the array
+        console.log(eventDetails);
+        alert(`Event Details\nRoom Number: ${roomNumber}\nArrival Date: ${eventDetails.arrivaldate}\nDeparture Date: ${eventDetails.departuredate.slice(0, 10)}\nMember Name: ${eventDetails.memname}\nMember Code: ${eventDetails.memphone}\nMember Code: ${eventDetails.memcode}\nBooking Date: ${eventDetails.bookingdate.slice(0, 10)}`);
+      } else {
+        // Handle case where no events are returned
+        console.error('No event details found');
+        alert('No event details found');
+      }
+    })
+    .catch((error) => {
+      console.error('Error fetching event details:', error);
+      // Handle error, e.g., display an error message
+    });
+}
 
 
 
 
 
-addEventBtn.addEventListener("click", () => {
+
+addEventBtn.addEventListener("click", async () => {
   addEventWrapper.classList.toggle("active");
+  const roomDetails = await fetchRoomsAndTypes();
+  // console.log(roomDetails);
+  updateSelectRooms(roomDetails);
 });
 
 addEventCloseBtn.addEventListener("click", () => {
@@ -311,46 +356,113 @@ document.addEventListener("click", (e) => {
   }
 });
 
-//allow 50 chars in eventtitle
-// addEventTitle.addEventListener("input", (e) => {
-//   addEventTitle.value = addEventTitle.value.slice(0, 60);
-// });
+addRoomBtn.addEventListener('click', async function () {
+  // Get the entered room number and room type
+  let newRoomNumber;
+  do {
+    const roomNumberInput = prompt('Enter Room Number');
+
+    // Check if the user clicked "Cancel"
+    if (roomNumberInput === null) {
+      return; // Cancel the operation
+    }
+
+    newRoomNumber = parseInt(roomNumberInput);
+
+    if (isNaN(newRoomNumber)) {
+      alert('Please enter a valid integer for the room number.');
+    }
+  } while (isNaN(newRoomNumber));
+
+  const newRoomType = prompt('Enter Room Type');
+
+  if (newRoomType !== null) {
+    try {
+      // Add the new room
+      const response = await fetch('addroom.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'roomNumber=' + encodeURIComponent(newRoomNumber) + '&roomType=' + encodeURIComponent(newRoomType),
+      });
+
+      const data = await response.text();
+      console.log(data); // Display response from the PHP script
+
+      // Fetch and update rooms and room types
+      const roomDetails = await fetchRoomsAndTypes();
+      console.log(roomDetails);
+      updateSelectRooms(roomDetails);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+});
 
 
-//allow only time in eventtime from and to
+// Function to fetch and update rooms and room types
+async function fetchRoomsAndTypes() {
+  try {
+    var day1 = activeDay;
+    var month1 = month+1;
+    var year1 = year;
+    const queryString = `?clickedDay=${day1}/${month1}/${year1}`;
+    const response = await fetch(`fetchrooms.php${queryString}`);
 
-// addEventFrom.addEventListener("input", (e) => {
-//   addEventFrom.value = addEventFrom.value.replace(/[^0-9:]/g, "");
-//   if (addEventFrom.value.length === 2) {
-//     addEventFrom.value += ":";
-//   }
-//   if (addEventFrom.value.length > 5) {
-//     addEventFrom.value = addEventFrom.value.slice(0, 5);
-//   }
-// });
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} ${response.statusText}`);
+    }
 
-// addEventTo.addEventListener("input", (e) => {
-//   addEventTo.value = addEventTo.value.replace(/[^0-9:]/g, "");
-//   if (addEventTo.value.length === 2) {
-//     addEventTo.value += ":";
-//   }
-//   if (addEventTo.value.length > 5) {
-//     addEventTo.value = addEventTo.value.slice(0, 5);
-//   }
-// });
+    const data = await response.json();
+
+    if (data.success) {
+      const rooms = data.data;
+      return data;
+    } else {
+      console.error('Error fetching data:', data.message);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error:', error.message);
+    return null;
+  }
+}
+
+
+function updateSelectRooms(roomDetails) {
+  // Clear existing options
+  selectRoom.innerHTML = '';
+
+  // Check if the data retrieval was successful
+  if (roomDetails.success && roomDetails.data) {
+    // Iterate through the data and add options to the select element
+    roomDetails.data.forEach(room => {
+      const option = document.createElement('option');
+      option.value = room.roomnumber;
+      option.text = `${room.roomtype} - ${room.roomnumber}`;
+      selectRoom.appendChild(option);
+    });
+  } else {
+    // Handle the case where data retrieval was not successful
+    console.error('Error retrieving room details:', roomDetails.message);
+  }
+}
+
+
 
 
 
 addEventSubmit.addEventListener("click", () => {
-  console.log("Add Event button clicked");
+    console.log("Add Event button clicked");
 
-  const roomNumber = document.querySelector(".event-name[placeholder='Room No']").value;
-    const bookingDate = document.getElementById("bookingDate").value;
-    const departureDate = document.getElementById("departureDate").value;
-    const memberPhone = document.querySelector(".event-name[placeholder='Member Phone']").value;
-    const memberCode = document.querySelector(".event-name[placeholder='Member Code']").value;
-    const memberName = document.querySelector(".event-name[placeholder='Member Name']").value;
-    
+    const roomNumber = document.getElementById("roomNumber").value;
+    console.log(roomNumber + "hello bello");
+    let bookingDate = document.getElementById("bookingDate").value;
+    let departureDate = document.getElementById("departureDate").value;
+    const memberPhone = document.querySelector(".member-phone[placeholder='Member Phone']").value;
+    const memberCode = document.querySelector(".member-code[placeholder='Member Code']").value;
+    const memberName = document.querySelector(".member-name[placeholder='Member Name']").value;
 
     if (bookingDate === "" || departureDate === "" || memberName === "" || memberPhone === "" || memberCode === "") {
       alert("Please fill all the fields");
@@ -383,38 +495,10 @@ addEventSubmit.addEventListener("click", () => {
     .then((data) => {
       console.log("Server response:", data);
       if (data.success) {
-        const newEvent = {
-          title: roomNumber,
-          time: activeDay + " - " + departureDate,
-        };
-        let eventAdded = false;
-        if (eventsArr.length > 0) {
-          eventsArr.forEach((item) => {
-            if (
-              item.day === activeDay &&
-              item.month === month + 1 &&
-              item.year === year
-            ) {
-              item.events.push(newEvent);
-              eventAdded = true;
-            }
-          });
-        }
-
-        if (!eventAdded) {
-          eventsArr.push({
-            day: activeDay,
-            month: month + 1,
-            year: year,
-            events: [newEvent],
-          });
-        }
-
-        // Optionally, close the add event wrapper
         addEventWrapper.classList.remove("active");
+        initCalendar();
 
-        // Optionally, update the events on the calendar
-        updateEvents(activeDay);
+        // clickedSelect.classList.add('bigtext');
       } else {
         // Event addition failed
         alert("Error adding event: " + data.message);
@@ -426,15 +510,25 @@ addEventSubmit.addEventListener("click", () => {
     });
 
     // Clear the form fields
-    document.getElementById("bookingDate").value = "";
-    document.getElementById("departureDate").value = "";
-    document.querySelector(".event-name[placeholder='Member Name']").value = "";
-    document.querySelector(".event-name[placeholder='Member Phone']").value = "";
-    document.querySelector(".event-name[placeholder='Member Code']").value = "";
+    document.getElementById("roomNumber").value="";
+    document.getElementById("bookingDate").value="";
+    document.getElementById("departureDate").value="";
+    document.querySelector(".member-phone[placeholder='Member Phone']").value="";
+    document.querySelector(".member-code[placeholder='Member Code']").value="";
+    document.querySelector(".member-name[placeholder='Member Name']").value="";
   
 });
 
-// ... (your existing code)
+
+
+function formatDate(rawDate) {
+  const date = new Date(rawDate);
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear().toString().slice(-2);
+
+  return `${day} ${month} ${year}`;
+}
 
 
 
@@ -493,52 +587,52 @@ function convertTime(time) {
 
 // }
 
-function deleteEvent(day, month, year, roomNumber) {
-  // Prompt the user for confirmation before deleting the event
-  console.log(roomNumber);
+async function deleteEvent(arrivaldate, roomnumber, departuredate) {
   const confirmDelete = confirm("Are you sure you want to delete this event?");
   if (!confirmDelete) {
-    return; // Do nothing if the user cancels the deletion
+    return;
   }
 
-  // Create a new XMLHttpRequest object
-  const xhr = new XMLHttpRequest();
+  try {
+    const response = await fetch("delete_event.php", {
+      method: "POST",
+      headers: {
+        "Content-type": "application/x-www-form-urlencoded",
+      },
+      body: `arrivaldate=${arrivaldate}&roomnumber=${roomnumber}&departuredate=${departuredate}`,
+    });
 
-  // Set up the request
-  xhr.open("POST", "delete_event.php", true);
-  xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-
-  // Define the callback function to handle the response
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState === 4) {
-      if (xhr.status === 200) {
-        const data = xhr.responseText.trim();
-        console.log("Server response:", data);
-        if (data === 'success') {
-          // Event deleted successfully
-
-          // Call the callback function if provided
-          if (typeof callback === 'function') {
-            callback();
-          }
-        } else {
-          // Event deletion failed
-          alert("Error deleting event. Please try again.");
-        }
-      } else {
-        // Handle errors here (e.g., network issues)
-        console.error("Error deleting event:", xhr.status, xhr.statusText);
-      }
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
     }
-  };
 
-  // Create the request body with URL-encoded parameters
-  const requestBody = `day=${day}&month=${month + 1}&year=${year}&roomNumber=${roomNumber}`;
+    const responseData = await response.json();
+    console.log("Server response:", responseData);
 
-  // Send the request
-  xhr.send(requestBody);
+    if (responseData.success) {
+      // Event deleted successfully
+      alert("Event deleted successfully.");
+
+      // Update the calendar after successful deletion
+      month = month; // Retain the current month
+      year = year; // Retain the current year
+      initCalendar();
+    } else {
+      // Event deletion failed
+      alert(`Error deleting event. Please try again. Server message: ${responseData.message}`);
+    }
+  }catch (error) {
+    console.error("Error deleting event:", error.message);
+  
+    // Log the entire response to understand the issue
+    console.log("Full response:", await response.text());
+  }
   
 }
+
+
+
+
 
 
 

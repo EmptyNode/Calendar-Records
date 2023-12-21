@@ -21,7 +21,7 @@ if (!is_numeric($day) || !is_numeric($month) || !is_numeric($year)) {
 }
 
 // Use prepared statement to prevent SQL injection
-$sql = "SELECT roomnumber FROM event WHERE DAY(arrivaldate) = ? AND MONTH(arrivaldate) = ? AND YEAR(arrivaldate) = ?";
+$sql = "SELECT bookingid, roomnumber, memname, memphone, departuredate, arrivaldate FROM guesthousebooking WHERE DAY(arrivaldate) = ? AND MONTH(arrivaldate) = ? AND YEAR(arrivaldate) = ?";
 $stmt = $conn->prepare($sql);
 
 if ($stmt) {
@@ -30,16 +30,16 @@ if ($stmt) {
     $result = $stmt->get_result();
 
     if ($result) {
-        $roomNumbers = array();
+        $bookingData = array();
 
-        // Fetch each row and add room number to the array
+        // Fetch each row and add booking ID, room number, memname, and memphone to the array
         while ($row = $result->fetch_assoc()) {
-            $roomNumbers[] = $row['roomnumber'];
+            $bookingData[] = $row;
         }
 
-        // Return the room numbers as JSON
+        // Return the booking data as JSON
         header('Content-Type: application/json');
-        echo json_encode(['roomNumbers' => $roomNumbers]);
+        echo json_encode(['bookingData' => $bookingData]);
     } else {
         // If an error occurred, return an error message
         header('Content-Type: application/json');
